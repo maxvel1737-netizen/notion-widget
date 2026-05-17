@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinoptik Weather Widget for Notion</title>
+    <style>
+        /* Стилізація під інтерфейс Notion */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        /* Контейнер для віджета, щоб він адаптувався та не обрізався */
+        .weather-container {
+            width: 100%;
+            max-width: 350px; /* Стандартна ширина для бокової панелі */
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Автоматична підтримка Темної теми Notion */
+        @media (prefers-color-color-scheme: dark) {
+            body {
+                background-color: #191919; /* Колір фону темної теми Notion */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="weather-container">
+        <div id="sinoptikInformerWeigth" class="siHeader">
+            <script type="text/javascript" charset="UTF-8" src="https://sinoptik.ua/informers_js.php?title=4&amp;id=303007131&amp;lang=uk"></script>
+        </div>
+        </div>
+
+</body>
+</html>
