@@ -3,491 +3,560 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notion Ultimate Modular Widget</title>
+    <title>Notion Modular Widget</title>
     <style>
         :root {
             --bg-color: #ffffff;
+            --card-bg: #f7f7f7;
             --text-color: #37352f;
-            --accent-color: #2383e2;
-            --accent-text: #ffffff;
-            --border-color: #e9e9e6;
-            --hover-color: #f1f1ef;
-            --muted-text: #787774;
+            --accent-color: #2eaadc;
+            --border-color: #e9e9e9;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #191919;
-                --text-color: #ffffff;
-                --accent-color: #2383e2;
-                --accent-text: #ffffff;
-                --border-color: #2f2f2f;
-                --hover-color: #242424;
-                --muted-text: #9b9b9b;
-            }
+        .dark-theme {
+            --bg-color: #191919;
+            --card-bg: #202020;
+            --text-color: #rgba(255, 255, 255, 0.9);
+            --accent-color: #2eaadc;
+            --border-color: #2f2f2f;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            overflow: hidden; /* Запобігає появі подвійних скролів у Notion */
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            width: 100%;
+            height: 100vh;
             background-color: var(--bg-color);
             color: var(--text-color);
-            padding: 8px;
+            font-family: var(--font-family);
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            height: 100vh;
-            box-sizing: border-box;
-            user-select: none;
         }
 
-        .settings-container {
+        /* Головний контейнер */
+        .widget-container {
+            display: flex;
+            flex-direction: column;
             width: 100%;
-            margin-bottom: 8px;
-            z-index: 100;
-            box-sizing: border-box;
-            flex-shrink: 0; /* Щоб панель налаштувань не стискалась */
+            height: 100vh;
+            padding: 10px;
+            position: relative;
         }
 
-        details {
-            background: var(--hover-color);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 6px 12px;
-        }
-
-        summary {
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            outline: none;
-            color: var(--muted-text);
-        }
-
-        .settings-content {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 10px;
-        }
-
-        .setting-section-title {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--muted-text);
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-
-        .checkbox-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-
-        .order-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .order-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 12px;
-            background: var(--bg-color);
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-        }
-
-        .order-buttons {
-            display: flex;
-            gap: 4px;
-        }
-
-        .btn-sort {
-            background: var(--hover-color);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            cursor: pointer;
-            padding: 2px 6px;
-            font-size: 11px;
-            color: var(--text-color);
-        }
-
-        .btn-sort:hover {
-            background: var(--border-color);
-        }
-
-        /* Головна сітка: тепер займає весь залишок висоти екрана */
+        /* Адаптивна сітка модулів */
         .widget-grid {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            flex-grow: 1;
             width: 100%;
-            flex-grow: 1; /* Розтягується по вертикалі на все вільне місце */
-            min-height: 0; /* Дозволяє внутрішнім елементам правильно стискатись/розтягуватись */
-            box-sizing: border-box;
+            height: 100%;
+            align-content: stretch;
         }
 
-        /* Адаптивність при розширенні вікна в Notion */
-        @media (min-width: 480px) {
+        /* Ключове виправлення №2: якщо календар єдиний на нижньому рядку, він розтягується від краю до краю */
+        .widget-grid .card-mod[data-id="calendar"] {
+            grid-column: 1 / -1;
+        }
+        
+        /* Якщо вікно стає дуже широким і всі поміщаються в один ряд */
+        @media (min-width: 600px) {
             .widget-grid {
-                grid-template-columns: 1.2fr 1fr;
-                grid-template-rows: 1fr 1fr; /* Рівномірно ділить висоту правої колонки */
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             }
-            
-            /* Календар займає ліву колонку на всю висоту */
-            #block-calendar {
-                grid-row: span 2;
+            /* Знімаємо розтягування на весь екран, якщо модулі вишикувалися в одну лінію side-by-side */
+            .widget-grid:has(.card-mod:nth-child(3)) .card-mod[data-id="calendar"] {
+                grid-column: auto;
             }
         }
 
-        /* Картки модулів: тепер заповнюють 100% висоти свого grid-поля */
-        .widget-block {
-            background: var(--bg-color);
+        /* Базовий стиль карток модулів */
+        .card-mod {
+            background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 12px;
-            box-sizing: border-box;
-            transition: all 0.2s ease;
+            border-radius: 12px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Центрування контенту по вертикалі */
-            align-items: center;    /* Центрування контенту по горизонталі */
-            width: 100%;
-            height: 100%;           /* Розтягування блоку на всю доступну висоту */
-            min-height: 0;
-        }
-
-        /* Модуль: День */
-        .day-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             text-align: center;
-            width: 100%;
+            position: relative;
+            min-width: 0; /* Захист від розпирання */
+            min-height: 0;
+            overflow: hidden; /* Ключове виправлення №1: текст не вилазить за рамки */
+            height: 100%;
+            transition: all 0.3s ease;
         }
 
+        /* Модуль День */
         .day-title {
-            font-size: clamp(11px, 2.5vw, 15px);
+            font-size: clamp(1rem, 4vw, 1.4rem);
+            font-weight: 500;
+            opacity: 0.6;
+            margin-bottom: 5px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: var(--muted-text);
-            font-weight: 600;
-            margin-bottom: 4px;
+            white-space: nowrap;
         }
 
-        .day-number {
-            font-size: clamp(36px, 7vw, 58px);
-            font-weight: 800;
+        .day-num {
+            font-size: clamp(2.5rem, 10vh, 4.5rem);
+            font-weight: 700;
             line-height: 1;
             color: var(--accent-color);
         }
 
-        /* Модуль: Годинник */
-        .clock-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            width: 100%;
+        .month-year {
+            font-size: clamp(0.9rem, 3vw, 1.1rem);
+            font-weight: 500;
+            margin-top: 5px;
+            white-space: nowrap;
         }
 
+        /* Модуль Годинник */
         .clock-time {
-            font-size: clamp(22px, 5vw, 38px);
+            font-size: clamp(2rem, 8vh, 3.8rem);
             font-weight: 700;
             font-variant-numeric: tabular-nums;
-            letter-spacing: 0.5px;
+            line-height: 1;
         }
 
-        /* Модуль: Календар */
-        .calendar-container {
+        /* Модуль Календар */
+        .calendar-box {
             width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            height: 100%;
+            justify-content: space-between;
         }
 
-        .calendar-header {
-            font-size: clamp(13px, 3vw, 16px);
+        .cal-header {
+            font-size: clamp(0.9rem, 3vw, 1.2rem);
             font-weight: 600;
-            text-align: center;
             margin-bottom: 8px;
-            flex-shrink: 0;
+            color: var(--text-color);
         }
 
-        .calendar-grid {
+        /* Сітка самого календаря */
+        .cal-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 2px;
-            text-align: center;
-            flex-grow: 1;
-            align-content: center; /* Рівномірний розподіл рядків календаря */
+            flex-grow: 1; /* Ключове виправлення №3: календар заповнює всю висоту картки */
+            width: 100%;
+            gap: 4px;
         }
 
-        .weekday {
-            font-size: clamp(10px, 2.2vw, 12px);
-            font-weight: 600;
-            color: var(--muted-text);
-            padding-bottom: 4px;
-            text-transform: uppercase;
-        }
-
-        .day-cell {
-            font-size: clamp(11px, 2.4vw, 14px);
-            padding: 4px 0;
+        /* Рядки календаря (дні тижня та числа) */
+        .cal-item {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(0.75rem, 2vh, 1rem);
             border-radius: 6px;
+            transition: background 0.2s;
+            min-height: 0;
+        }
+
+        /* Дні тижня верхнього рядка */
+        .cal-day-name {
+            font-weight: 600;
+            opacity: 0.5;
+            padding-bottom: 4px;
+        }
+
+        /* Поточний підсвічений день */
+        .cal-item.today {
+            background-color: var(--accent-color);
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .cal-item.other-month {
+            opacity: 0.25;
+        }
+
+        /* Кнопка налаштувань (шестірня) */
+        .settings-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 28px;
+            height: 28px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            opacity: 0.3;
+            transition: opacity 0.2s;
+        }
+
+        .settings-btn:hover {
+            opacity: 1;
+        }
+
+        .settings-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--text-color);
+        }
+
+        /* Панель конструктора */
+        .config-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            z-index: 100;
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .config-panel.active {
+            display: flex;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .config-section {
+            margin-bottom: 20px;
+        }
+
+        .config-section h3 {
+            margin-bottom: 10px;
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .toggle-item {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
+            padding: 8px 0;
         }
 
-        .day-cell.empty {
-            visibility: hidden;
+        /* Сортування списку */
+        .sort-list {
+            list-style: none;
         }
 
-        .day-cell.today {
-            background-color: var(--accent-color);
-            color: var(--accent-text);
-            font-weight: 700;
+        .sort-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--card-bg);
+            padding: 10px;
+            margin-bottom: 6px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .sort-btns button {
+            background: none;
+            border: 1px solid var(--border-color);
+            padding: 2px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text-color);
+            margin-left: 4px;
         }
     </style>
 </head>
 <body>
 
-    <div class="settings-container">
-        <details>
-            <summary>⚙️ Конструктор розташування модулів</summary>
-            <div class="settings-content">
-                
-                <div>
-                    <div class="setting-section-title">Видимість</div>
-                    <div class="checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="chk-day" checked> Модуль: День
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="chk-clock" checked> Модуль: Годинник
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="chk-calendar" checked> Модуль: Календар
-                        </label>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="setting-section-title">Порядок блоків (Вгору / Вниз)</div>
-                    <div class="order-group" id="sortable-order-list">
-                        <div class="order-item" data-block-id="block-day">
-                            <span>📅 Модуль: День</span>
-                            <div class="order-buttons">
-                                <button class="btn-sort btn-up">▲</button>
-                                <button class="btn-sort btn-down">▼</button>
-                            </div>
-                        </div>
-                        <div class="order-item" data-block-id="block-clock">
-                            <span>🕒 Модуль: Годинник</span>
-                            <div class="order-buttons">
-                                <button class="btn-sort btn-up">▲</button>
-                                <button class="btn-sort btn-down">▼</button>
-                            </div>
-                        </div>
-                        <div class="order-item" data-block-id="block-calendar">
-                            <span>🗓️ Модуль: Календар</span>
-                            <div class="order-buttons">
-                                <button class="btn-sort btn-up">▲</button>
-                                <button class="btn-sort btn-down">▼</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+    <div class="widget-container">
+        <div class="widget-grid" id="widgetGrid">
+            <div class="card-mod" data-id="day">
+                <div class="day-title" id="dayTitle">Неділя</div>
+                <div class="day-num" id="dayNum">17</div>
+                <div class="month-year" id="monthYear">Травень 2026</div>
             </div>
-        </details>
+            <div class="card-mod" data-id="clock">
+                <div class="clock-time" id="clockTime">12:00</div>
+            </div>
+            <div class="card-mod" data-id="calendar">
+                <div class="calendar-box">
+                    <div class="cal-header" id="calHeader">Травень 2026</div>
+                    <div class="cal-grid" id="calGrid"></div>
+                </div>
+            </div>
+        </div>
+
+        <button class="settings-btn" id="settingsBtn" title="Налаштування розташування">
+            <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3-1.57-3-3.5s1.07-3.5 3-3.5 3 1.57 3 3.5-1.07 3.5-3 3.5z"/></svg>
+        </button>
     </div>
 
-    <div class="widget-grid" id="main-widget-grid">
-        
-        <div id="block-day" class="widget-block">
-            <div class="day-container">
-                <div class="day-title" id="lbl-day-name">---</div>
-                <div class="day-number" id="lbl-day-num">00</div>
+    <div class="config-panel" id="configPanel">
+        <div class="panel-header">
+            <h2>⚙️ Конструктор віджета</h2>
+            <button class="close-btn" id="closeBtn">&times;</button>
+        </div>
+
+        <div class="config-section">
+            <h3>Видимість модулів</h3>
+            <div class="toggle-item">
+                <span>Показувати День</span>
+                <input type="checkbox" id="chkDay" checked>
+            </div>
+            <div class="toggle-item">
+                <span>Показувати Годинник</span>
+                <input type="checkbox" id="chkClock" checked>
+            </div>
+            <div class="toggle-item">
+                <span>Показувати Календар</span>
+                <input type="checkbox" id="chkCalendar" checked>
+            </div>
+            <div class="toggle-item">
+                <span>Темна тема</span>
+                <input type="checkbox" id="chkTheme">
             </div>
         </div>
 
-        <div id="block-clock" class="widget-block">
-            <div class="clock-container">
-                <div class="clock-time" id="lbl-clock">00:00:00</div>
-            </div>
+        <div class="config-section">
+            <h3>Порядок розташування (▲ вище / ▼ нижче)</h3>
+            <ul class="sort-list" id="sortList">
+                <li class="sort-item" data-id="day">
+                    <span>📅 Модуль: День</span>
+                    <div class="sort-btns">
+                        <button class="btn-up">▲</button>
+                        <button class="btn-down">▼</button>
+                    </div>
+                </li>
+                <li class="sort-item" data-id="clock">
+                    <span>⏰ Модуль: Годинник</span>
+                    <div class="sort-btns">
+                        <button class="btn-up">▲</button>
+                        <button class="btn-down">▼</button>
+                    </div>
+                </li>
+                <li class="sort-item" data-id="calendar">
+                    <span>📆 Модуль: Календар</span>
+                    <div class="sort-btns">
+                        <button class="btn-up">▲</button>
+                        <button class="btn-down">▼</button>
+                    </div>
+                </li>
+            </ul>
         </div>
-
-        <div id="block-calendar" class="widget-block">
-            <div class="calendar-container">
-                <div class="calendar-header" id="calendar-month-year">Місяць Рік</div>
-                <div class="calendar-grid" id="calendar-days-grid"></div>
-            </div>
-        </div>
-
     </div>
 
     <script>
-        const chkDay = document.getElementById('chk-day');
-        const chkClock = document.getElementById('chk-clock');
-        const chkCalendar = document.getElementById('chk-calendar');
+        const widgetGrid = document.getElementById('widgetGrid');
+        const configPanel = document.getElementById('configPanel');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const closeBtn = document.getElementById('closeBtn');
 
-        const blockDay = document.getElementById('block-day');
-        const blockClock = document.getElementById('block-clock');
-        const blockCalendar = document.getElementById('block-calendar');
-        const mainGrid = document.getElementById('main-widget-grid');
-        const sortableList = document.getElementById('sortable-order-list');
+        const chkDay = document.getElementById('chkDay');
+        const chkClock = document.getElementById('chkClock');
+        const chkCalendar = document.getElementById('chkCalendar');
+        const chkTheme = document.getElementById('chkTheme');
+        const sortList = document.getElementById('sortList');
 
-        const lblDayName = document.getElementById('lbl-day-name');
-        const lblDayNum = document.getElementById('lbl-day-num');
-        const lblClock = document.getElementById('lbl-clock');
-        const calendarMonthYear = document.getElementById('calendar-month-year');
-        const calendarDaysGrid = document.getElementById('calendar-days-grid');
+        // Мова та локалізація
+        const daysOfWeekList = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
+        const monthsList = ['Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень', 'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'];
+        const daysFullList = ['Неділя', 'Понеділок', 'Вівторок', 'Середа', 'Четвер', 'П' + 'ятниця', 'Субота'];
+
+        // Завантаження збережених налаштувань
+        let order = JSON.parse(localStorage.getItem('notion-mod-order')) || ['day', 'clock', 'calendar'];
+        let visibility = JSON.parse(localStorage.getItem('notion-mod-vis')) || { day: true, clock: true, calendar: true };
+        let darkTheme = localStorage.getItem('notion-mod-dark') === 'true';
+
+        chkDay.checked = visibility.day;
+        chkClock.checked = visibility.clock;
+        chkCalendar.checked = visibility.calendar;
+        chkTheme.checked = darkTheme;
+        if(darkTheme) document.body.classList.add('dark-theme');
 
         function updateWidgetData() {
             const now = new Date();
-            const dayNames = ['Неділя', 'Понеділок', 'Вівторок', 'Середа', 'Четвер', "П'ятниця", 'Субота'];
-            lblDayName.textContent = dayNames[now.getDay()];
-            lblDayNum.textContent = now.getDate();
+            
+            // Оновлення модулів "День"
+            document.getElementById('dayTitle').innerText = daysFullList[now.getDay()];
+            document.getElementById('dayNum').innerText = now.getDate();
+            document.getElementById('monthYear').innerText = `${monthsList[now.getMonth()]} ${now.getFullYear()}`;
 
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            lblClock.textContent = `${hours}:${minutes}:${seconds}`;
+            // Оновлення "Годинника"
+            let hh = String(now.getHours()).padStart(2, '0');
+            let mm = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('clockTime').innerText = `${hh}:${mm}`;
+
+            // Заголовок календаря
+            document.getElementById('calHeader').innerText = `${monthsList[now.getMonth()]} ${now.getFullYear()}`;
         }
 
         function buildFullMonthCalendar() {
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth();
-            const todayDate = now.getDate();
-
-            const monthNames = [
-                'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
-                'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'
-            ];
-            calendarMonthYear.textContent = `${monthNames[currentMonth]} ${currentYear}`;
-            calendarDaysGrid.innerHTML = '';
-
-            const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
-            weekdays.forEach(day => {
-                const dayHeader = document.createElement('div');
-                dayHeader.className = 'weekday';
-                dayHeader.textContent = day;
-                calendarDaysGrid.appendChild(dayHeader);
+            const calGrid = document.getElementById('calGrid');
+            calGrid.innerHTML = '';
+            
+            // Додаємо назви днів
+            daysOfWeekList.forEach(name => {
+                const dayNameBox = document.createElement('div');
+                dayNameBox.className = 'cal-item cal-day-name';
+                dayNameBox.innerText = name;
+                calGrid.appendChild(dayNameBox);
             });
 
-            const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
-            let startDayOfWeek = firstDayOfMonth.getDay();
-            if (startDayOfWeek === 0) startDayOfWeek = 7;
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const todayDate = now.getDate();
 
-            const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            // Перший день місяця
+            const firstDay = new Date(year, month, 1);
+            // Перетворення дня тижня (0 - нд, міняємо на пн=0...нд=6)
+            let startDay = firstDay.getDay() - 1;
+            if (startDay === -1) startDay = 6;
 
-            for (let i = 1; i < startDayOfWeek; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.className = 'day-cell empty';
-                calendarDaysGrid.appendChild(emptyCell);
+            // Кількість днів у поточному місяці
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            // Кількість днів у попередньому місяці
+            const prevTotalDays = new Date(year, month, 0).getDate();
+
+            // Дні попереднього місяця («хвости»)
+            for (let i = startDay - 1; i >= 0; i--) {
+                const cell = document.createElement('div');
+                cell.className = 'cal-item other-month';
+                cell.innerText = prevTotalDays - i;
+                calGrid.appendChild(cell);
             }
 
-            for (let day = 1; day <= totalDaysInMonth; day++) {
-                const dayCell = document.createElement('div');
-                dayCell.className = 'day-cell';
-                dayCell.textContent = day;
-
-                if (day === todayDate) {
-                    dayCell.className = 'day-cell today';
+            // Дні поточного місяця
+            for (let d = 1; d <= totalDays; d++) {
+                const cell = document.createElement('div');
+                cell.className = 'cal-item';
+                cell.innerText = d;
+                if (d === todayDate) {
+                    cell.className += ' today';
                 }
-                calendarDaysGrid.appendChild(dayCell);
+                calGrid.appendChild(cell);
+            }
+
+            // Заповнення порожніх клітинок наприкінці до повної сітки (6 рядків по 7 днів)
+            const currentCells = calGrid.children.length - 7; // мінус назви днів
+            const remaining = 42 - currentCells; 
+            for (let x = 1; x <= remaining; x++) {
+                const cell = document.createElement('div');
+                cell.className = 'cal-item other-month';
+                cell.innerText = x;
+                calGrid.appendChild(cell);
             }
         }
 
         function adjustLayout() {
-            const activeCount = [chkDay.checked, chkClock.checked, chkCalendar.checked].filter(Boolean).length;
+            visibility.day = chkDay.checked;
+            visibility.clock = chkClock.checked;
+            visibility.calendar = chkCalendar.checked;
 
-            blockDay.style.display = chkDay.checked ? 'flex' : 'none';
-            blockClock.style.display = chkClock.checked ? 'flex' : 'none';
-            blockCalendar.style.display = chkCalendar.checked ? 'flex' : 'none';
+            localStorage.setItem('notion-mod-vis', JSON.stringify(visibility));
 
-            if (activeCount === 1) {
-                mainGrid.style.gridTemplateColumns = "1fr";
-                mainGrid.style.gridTemplateRows = "1fr";
-            } else {
-                if (window.innerWidth >= 480) {
-                    mainGrid.style.gridTemplateColumns = "1.2fr 1fr";
-                    mainGrid.style.gridTemplateRows = "1fr 1fr";
-                } else {
-                    mainGrid.style.gridTemplateColumns = "1fr";
-                    mainGrid.style.gridTemplateRows = `repeat(${activeCount}, 1fr)`;
+            // Застосування видимості та порядку
+            const cards = Array.from(widgetGrid.children);
+            
+            order.forEach((id, index) => {
+                const card = cards.find(c => c.getAttribute('data-id') === id);
+                if(card) {
+                    card.style.order = index;
+                    if(visibility[id]) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
                 }
-            }
+            });
         }
 
         function updateDOMOrder() {
-            const items = sortableList.querySelectorAll('.order-item');
-            items.forEach(item => {
-                const blockId = item.getAttribute('data-block-id');
-                const blockElement = document.getElementById(blockId);
-                if (blockElement) {
-                    mainGrid.appendChild(blockElement);
-                }
-            });
+            const items = Array.from(sortList.children);
+            order = items.map(item => item.getAttribute('data-id'));
+            localStorage.setItem('notion-mod-order', JSON.stringify(order));
             adjustLayout();
         }
 
-        sortableList.addEventListener('click', (e) => {
-            const btn = e.target;
-            if (!btn.classList.contains('btn-sort')) return;
+        // Події конструктора та переміщення
+        settingsBtn.onclick = () => configPanel.classList.add('active');
+        closeBtn.onclick = () => configPanel.classList.remove('active');
 
-            const currentItem = btn.closest('.order-item');
-            if (btn.classList.contains('btn-up')) {
-                const previousItem = currentItem.previousElementSibling;
-                if (previousItem) {
-                    sortableList.insertBefore(currentItem, previousItem);
+        chkTheme.onchange = () => {
+            if(chkTheme.checked) {
+                document.body.classList.add('dark-theme');
+                localStorage.setItem('notion-mod-dark', 'true');
+            } else {
+                document.body.classList.remove('dark-theme');
+                localStorage.setItem('notion-mod-dark', 'false');
+            }
+        };
+
+        sortList.addEventListener('click', (e) => {
+            const target = e.target;
+            const currentItem = target.closest('.sort-item');
+            if(!currentItem) return;
+
+            if(target.classList.contains('btn-up')) {
+                const prevItem = currentItem.previousElementSibling;
+                if(prevItem) {
+                    sortList.insertBefore(currentItem, prevItem);
                     updateDOMOrder();
                 }
-            } else if (btn.classList.contains('btn-down')) {
+            }
+            if(target.classList.contains('btn-down')) {
                 const nextItem = currentItem.nextElementSibling;
-                if (nextItem) {
-                    sortableList.insertBefore(nextItem, currentItem);
+                if(nextItem) {
+                    sortList.insertBefore(nextItem, currentItem);
                     updateDOMOrder();
                 }
             }
         });
 
-        chkDay.addEventListener('change', adjustLayout);
-        chkClock.addEventListener('change', adjustLayout);
-        chkCalendar.addEventListener('change', adjustLayout);
-        window.addEventListener('resize', adjustLayout);
+        // Ініціалізація сортувального списку в UI відповідно до збереженого порядку
+        function initSortListUI() {
+            const items = Array.from(sortList.children);
+            order.forEach(id => {
+                const el = items.find(i => i.getAttribute('data-id') === id);
+                if(el) sortList.appendChild(el);
+            });
+        }
 
+        chkDay.onchange = adjustLayout;
+        chkClock.onchange = adjustLayout;
+        chkCalendar.onchange = adjustLayout;
+        window.onresize = adjustLayout;
+
+        // Старт
+        initSortListUI();
         updateWidgetData();
         buildFullMonthCalendar();
-        updateDOMOrder();
-
+        adjustLayout();
         setInterval(updateWidgetData, 1000);
     </script>
 </body>
