@@ -95,7 +95,6 @@
             cursor: pointer;
         }
 
-        /* Панель сортування порядку */
         .order-group {
             display: flex;
             flex-direction: column;
@@ -132,40 +131,39 @@
             background: var(--border-color);
         }
 
-        /* Повністю гумова Flex-сітка для абсолютної адаптивності по боках/вертикалі */
+        /* Оновлена розумна двохколонкова Grid-сітка */
         .widget-grid {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: 1fr;
             gap: 10px;
             width: 100%;
             box-sizing: border-box;
+        }
+
+        /* Коли екран стає ширшим за 480px, автоматично формується двоколонковий режим */
+        @media (min-width: 480px) {
+            .widget-grid {
+                grid-template-columns: 1.2fr 1fr;
+            }
+            
+            /* Робимо так, щоб великий календар завжди займав ліву колонку на всю висоту */
+            #block-calendar {
+                grid-row: span 2;
+            }
         }
 
         .widget-block {
             background: var(--bg-color);
             border: 1px solid var(--border-color);
             border-radius: 10px;
-            padding: 12px;
+            padding: 16px;
             box-sizing: border-box;
             transition: all 0.2s ease;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-width: 140px;
-        }
-
-        /* Розумні класи ширини, що адаптуються під контейнер */
-        .w-full {
-            flex: 1 1 100%;
-        }
-        
-        .w-half {
-            flex: 1 1 calc(50% - 5px);
-        }
-
-        .w-third {
-            flex: 1 1 calc(33.333% - 7px);
+            width: 100%;
         }
 
         /* Модуль: День */
@@ -179,16 +177,16 @@
         }
 
         .day-title {
-            font-size: clamp(10px, 2.8vw, 14px);
+            font-size: clamp(11px, 2.8vw, 15px);
             text-transform: uppercase;
             letter-spacing: 1px;
             color: var(--muted-text);
             font-weight: 600;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
         }
 
         .day-number {
-            font-size: clamp(32px, 8vw, 56px);
+            font-size: clamp(36px, 8vw, 58px);
             font-weight: 800;
             line-height: 1;
             color: var(--accent-color);
@@ -205,7 +203,7 @@
         }
 
         .clock-time {
-            font-size: clamp(20px, 6vw, 36px);
+            font-size: clamp(22px, 6vw, 38px);
             font-weight: 700;
             font-variant-numeric: tabular-nums;
             letter-spacing: 0.5px;
@@ -217,31 +215,31 @@
         }
 
         .calendar-header {
-            font-size: clamp(12px, 3.2vw, 15px);
+            font-size: clamp(13px, 3.2vw, 16px);
             font-weight: 600;
             text-align: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 2px;
+            gap: 4px;
             text-align: center;
         }
 
         .weekday {
-            font-size: clamp(9px, 2.4vw, 11px);
+            font-size: clamp(10px, 2.4vw, 12px);
             font-weight: 600;
             color: var(--muted-text);
-            padding-bottom: 2px;
+            padding-bottom: 4px;
             text-transform: uppercase;
         }
 
         .day-cell {
-            font-size: clamp(10px, 2.6vw, 13px);
-            padding: 4px 0;
-            border-radius: 4px;
+            font-size: clamp(11px, 2.6vw, 14px);
+            padding: 6px 0;
+            border-radius: 6px;
         }
 
         .day-cell.empty {
@@ -406,7 +404,7 @@
             }
         }
 
-        // Логіка гнучкого розподілу ширини залежно від увімкнених модулів
+        // Спрощена логіка видимості, яка більше не ламає CSS сітку жорсткими класами ширини
         function adjustLayout() {
             const activeCount = [chkDay.checked, chkClock.checked, chkCalendar.checked].filter(Boolean).length;
 
@@ -414,40 +412,31 @@
             blockClock.style.display = chkClock.checked ? 'flex' : 'none';
             blockCalendar.style.display = chkCalendar.checked ? 'flex' : 'none';
 
-            [blockDay, blockClock, blockCalendar].forEach(b => {
-                b.className = 'widget-block';
-            });
-
-            if (activeCount === 3) {
-                // Якщо активні всі три, то підлаштовується автоматично: або 3 в ряд, або перенос
-                blockDay.classList.add('w-half');
-                blockClock.classList.add('w-half');
-                blockCalendar.classList.add('w-full');
-            } else if (activeCount === 2) {
-                if (chkDay.checked) blockDay.classList.add('w-half');
-                if (chkClock.checked) blockClock.classList.add('w-half');
-                if (chkCalendar.checked) blockCalendar.classList.add('w-half');
-            } else if (activeCount === 1) {
-                if (chkDay.checked) blockDay.classList.add('w-full');
-                if (chkClock.checked) blockClock.classList.add('w-full');
-                if (chkCalendar.checked) blockCalendar.classList.add('w-full');
+            // Якщо активований лише 1 блок, перемикаємо сітку в одну колонку, щоб він розтягнувся
+            if (activeCount === 1) {
+                mainGrid.style.gridTemplateColumns = "1fr";
+            } else {
+                // Відновлюємо адаптивні дві колонки, якщо блоків більше ніж 1
+                if (window.innerWidth >= 480) {
+                    mainGrid.style.gridTemplateColumns = "1.2fr 1fr";
+                } else {
+                    mainGrid.style.gridTemplateColumns = "1fr";
+                }
             }
         }
 
-        // Керування фізичним переміщенням DOM-елементів у сітці
         function updateDOMOrder() {
             const items = sortableList.querySelectorAll('.order-item');
             items.forEach(item => {
                 const blockId = item.getAttribute('data-block-id');
                 const blockElement = document.getElementById(blockId);
                 if (blockElement) {
-                    mainGrid.appendChild(blockElement); // Переносимо елемент в кінець сітки згідно з новим порядком
+                    mainGrid.appendChild(blockElement);
                 }
             });
             adjustLayout();
         }
 
-        // Обробка подій кліку по стрілочках сортування
         sortableList.addEventListener('click', (e) => {
             const btn = e.target;
             if (!btn.classList.contains('btn-sort')) return;
@@ -471,6 +460,7 @@
         chkDay.addEventListener('change', adjustLayout);
         chkClock.addEventListener('change', adjustLayout);
         chkCalendar.addEventListener('change', adjustLayout);
+        window.addEventListener('resize', adjustLayout);
 
         updateWidgetData();
         buildFullMonthCalendar();
