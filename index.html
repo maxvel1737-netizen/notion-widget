@@ -16,7 +16,8 @@
             --today-bg: #fbe4e4;
             --today-text: #d44242;
             --muted-text: #9b9a97;
-            --weekend-text: #c0c0c0;
+            --dropdown-bg: #ffffff;
+            --dropdown-shadow: rgba(15, 15, 15, 0.05) 0px 0px 0px 1px, rgba(15, 15, 15, 0.1) 0px 3px 6px;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -30,7 +31,8 @@
                 --today-bg: #522525;
                 --today-text: #ff7373;
                 --muted-text: #5a5a5a;
-                --weekend-text: #6b6b6b;
+                --dropdown-bg: #252525;
+                --dropdown-shadow: rgba(0, 0, 0, 0.2) 0px 0px 0px 1px, rgba(0, 0, 0, 0.4) 0px 3px 6px;
             }
         }
 
@@ -48,7 +50,7 @@
             box-sizing: border-box;
         }
 
-        /* Меню керування */
+        /* Верхня панель навігації та меню */
         .controls {
             display: flex;
             justify-content: space-between;
@@ -56,9 +58,10 @@
             margin-bottom: 12px;
             gap: 8px;
             flex-shrink: 0;
+            position: relative;
         }
 
-        .nav-buttons, .view-switcher {
+        .nav-buttons {
             display: flex;
             background-color: var(--hover-color);
             padding: 2px;
@@ -80,7 +83,67 @@
         }
 
         button:hover { background-color: var(--border-color); }
-        button.active { background-color: var(--active-color); color: var(--active-text); }
+
+        /* Стилі для Toggle List (Випадного Меню) */
+        .toggle-container {
+            position: relative;
+        }
+
+        .toggle-trigger {
+            background-color: var(--hover-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 5px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toggle-trigger:hover {
+            background-color: var(--border-color);
+        }
+
+        .toggle-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 4px);
+            background-color: var(--dropdown-bg);
+            border-radius: 6px;
+            box-shadow: var(--dropdown-shadow);
+            padding: 4px;
+            min-width: 160px;
+            z-index: 1000;
+        }
+
+        .toggle-menu.open {
+            display: block;
+        }
+
+        .toggle-item {
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-color);
+        }
+
+        .toggle-item:hover {
+            background-color: var(--hover-color);
+        }
+
+        .toggle-item.selected {
+            background-color: var(--active-color);
+            color: var(--active-text);
+        }
 
         /* Контейнер макетів */
         .layout-container {
@@ -163,23 +226,27 @@
         .d-weekday { font-size: 16px; color: var(--text-color); font-weight: 500; }
         .d-year { font-size: 12px; color: var(--muted-text); margin-top: 5px; }
 
-        /* --- РЕЖИМ 4: КОМБІНОВАНИЙ --- */
+        /* --- КОМБІНОВАНИЙ РЕЖИМ (ДЕНЬ + МІСЯЦЬ) --- */
         .split-wrapper {
             display: flex;
             height: 100%;
             width: 100%;
+            flex-wrap: nowrap;
         }
         .split-left {
             width: 35%;
+            min-width: 90px;
             border-right: 1px solid var(--border-color);
             background-color: var(--hover-color);
         }
         .split-right {
             width: 65%;
+            flex-grow: 1;
         }
-        .split-left .d-num { font-size: 56px; }
+        .split-left .d-num { font-size: 48px; }
+        .split-left .d-weekday { font-size: 13px; }
 
-        /* Динамічні хованки для режимів */
+        /* Перемикання відображення контенту */
         .view-content { display: none; height: 100%; width: 100%; }
         .view-content.active { display: block; }
         .split-wrapper.active { display: flex; }
@@ -194,11 +261,15 @@
             <button id="nextBtn"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
 
-        <div class="view-switcher">
-            <button class="view-btn active" data-view="1">1. ⏹️ Місяць</button>
-            <button class="view-btn" data-view="2">2. ⏹️ День</button>
-            <button class="view-btn" data-view="3">3. 🛑 Місяць</button>
-            <button class="view-btn" data-view="4">4. 🛑 День+Місяць</button>
+        <div class="toggle-container">
+            <div class="toggle-trigger" id="toggleTrigger">
+                <span id="currentTargetLabel">⏹️ Місяць</span> <i class="fa-solid fa-chevron-down" style="font-size: 10px; opacity: 0.7;"></i>
+            </div>
+            <div class="toggle-menu" id="toggleMenu">
+                <div class="toggle-item selected" data-view="1">⏹️ Місяць</div>
+                <div class="toggle-item" data-view="2">⏹️ День</div>
+                <div class="toggle-item" data-view="4">🛑 День + Місяць</div>
+            </div>
         </div>
     </div>
 
@@ -231,22 +302,41 @@
 
     <script>
         let currentDate = new Date();
-        let activeLayout = "1"; // 1, 2, 3, 4
+        let activeLayout = "1"; // 1, 2, 4
 
         const monthsUa = ["Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень", "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"];
         const weekdaysUa = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
 
-        // Логіка перемикання кнопок макетів
-        document.querySelectorAll('.view-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                activeLayout = btn.getAttribute('data-view');
+        const toggleTrigger = document.getElementById('toggleTrigger');
+        const toggleMenu = document.getElementById('toggleMenu');
+        const currentTargetLabel = document.getElementById('currentTargetLabel');
+
+        // Відкриття/Закриття випадаючого списку
+        toggleTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMenu.classList.toggle('open');
+        });
+
+        // Клік по елементу меню
+        document.querySelectorAll('.toggle-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                document.querySelectorAll('.toggle-item').forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                
+                activeLayout = item.getAttribute('data-view');
+                currentTargetLabel.innerText = item.innerText;
+                
+                toggleMenu.classList.remove('open');
                 switchLayout();
             });
         });
 
-        // Навігація
+        // Закриття меню, якщо клікнули мимо нього
+        document.addEventListener('click', () => {
+            toggleMenu.classList.remove('open');
+        });
+
+        // Навігація кнопками
         document.getElementById('prevBtn').addEventListener('click', () => navigate(-1));
         document.getElementById('nextBtn').addEventListener('click', () => navigate(1));
         document.getElementById('todayBtn').addEventListener('click', () => {
@@ -256,20 +346,17 @@
 
         function navigate(dir) {
             if (activeLayout === "2") {
-                // В одиночному денному виді гортаємо по днях
                 currentDate.setDate(currentDate.getDate() + dir);
             } else {
-                // В усіх інших видах гортаємо по місяцях
                 currentDate.setMonth(currentDate.getMonth() + dir);
             }
             updateAll();
         }
 
         function switchLayout() {
-            // Скидаємо активацію з усіх контейнерів
             document.querySelectorAll('.view-content').forEach(c => c.classList.remove('active'));
 
-            if (activeLayout === "1" || activeLayout === "3") {
+            if (activeLayout === "1") {
                 document.getElementById('view-month-single').classList.add('active');
             } else if (activeLayout === "2") {
                 document.getElementById('view-day-single').classList.add('active');
@@ -307,7 +394,6 @@
 
             header.innerText = `${monthsUa[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
 
-            // Рендер днів тижня (Пн-Нд)
             weekdays.innerHTML = '';
             weekdaysUa.forEach(d => {
                 const div = document.createElement('div');
@@ -315,7 +401,6 @@
                 weekdays.appendChild(div);
             });
 
-            // Рендер сітки дат
             daysGrid.innerHTML = '';
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
@@ -326,7 +411,6 @@
             const totalDays = new Date(year, month + 1, 0).getDate();
             const prevTotalDays = new Date(year, month, 0).getDate();
 
-            // Попередній місяць
             for (let i = startOffset; i > 0; i--) {
                 const cell = document.createElement('div');
                 cell.className = 'day-cell other-month';
@@ -334,21 +418,17 @@
                 daysGrid.appendChild(cell);
             }
 
-            // Поточний місяць
             const today = new Date();
             for (let i = 1; i <= totalDays; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'day-cell';
-                
                 if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
                     cell.classList.add('today');
                 }
-                
                 cell.innerHTML = `<span class="day-num">${i}</span>`;
                 daysGrid.appendChild(cell);
             }
 
-            // Наступний місяць
             const totalCells = startOffset + totalDays;
             const nextDays = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
             for (let i = 1; i <= nextDays; i++) {
@@ -358,7 +438,6 @@
                 daysGrid.appendChild(cell);
             }
             
-            // Якщо раптом ліній менше ніж 6, дозаповнюємо для красивої структури
             const currentTotalCells = startOffset + totalDays + nextDays;
             if (currentTotalCells < 42) {
                 const extraDays = 42 - currentTotalCells;
@@ -371,7 +450,6 @@
             }
         }
 
-        // Перший запуск
         updateAll();
     </script>
 </body>
