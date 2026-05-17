@@ -45,7 +45,7 @@
         /* Меню налаштувань (Toggle) */
         .settings-container {
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
             margin-bottom: 15px;
             z-index: 100;
         }
@@ -87,7 +87,7 @@
             flex-wrap: wrap;
             gap: 15px;
             width: 100%;
-            max-width: 500px;
+            max-width: 450px;
             justify-content: center;
         }
 
@@ -97,8 +97,11 @@
             border-radius: 12px;
             padding: 15px;
             box-sizing: border-box;
-            transition: all 0.3s ease;
-            display: none; /* Керується через JS */
+            transition: all 0.2s ease;
+            display: none; /* Керується динамічно через JS */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         /* Адаптивні класи ширини */
@@ -108,7 +111,7 @@
         
         .w-half {
             flex: 1 1 calc(50% - 8px);
-            min-width: 200px;
+            min-width: 180px;
         }
 
         /* Стилі модуля: День */
@@ -117,12 +120,11 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100%;
             text-align: center;
         }
 
         .day-title {
-            font-size: 14px;
+            font-size: 13px;
             text-transform: uppercase;
             letter-spacing: 1.5px;
             color: var(--muted-text);
@@ -131,7 +133,7 @@
         }
 
         .day-number {
-            font-size: 48px;
+            font-size: 44px;
             font-weight: 800;
             line-height: 1;
             color: var(--accent-color);
@@ -144,7 +146,6 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            height: 100%;
         }
 
         .clock-time {
@@ -163,9 +164,8 @@
             font-size: 14px;
             font-weight: 600;
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             color: var(--text-color);
-            text-transform: capitalize;
         }
 
         .calendar-grid {
@@ -268,7 +268,7 @@
             const now = new Date();
 
             // 1. Оновлення Дня
-            const dayNames = ['Неділя', 'Понед.', 'Вівторок', 'Середа', 'Четвер', 'П'ятниця', 'Субота'];
+            const dayNames = ['Неділя', 'Понеділок', 'Вівторок', 'Середа', 'Четвер', 'Пятниця', 'Субота'];
             lblDayName.textContent = dayNames[now.getDay()];
             lblDayNum.textContent = now.getDate();
 
@@ -307,9 +307,8 @@
 
             // Перший день місяця (дізнаємось день тижня)
             const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
-            // Перетворюємо неділю (0) в 7, щоб легше рахувати від Пн (1)
             let startDayOfWeek = firstDayOfMonth.getDay();
-            if (startDayOfWeek === 0) startDayOfWeek = 7;
+            if (startDayOfWeek === 0) startDayOfWeek = 7; // Перетворюємо неділю (0) в 7
 
             // Кількість днів у місяці
             const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -336,16 +335,16 @@
             }
         }
 
-        // Логіка відображення та динамічної зміни розмірів сітки (Flex Layout)
+        // Логіка відображення та динамічної зміни розмірів сітки
         function adjustLayout() {
             const isDayVisible = chkDay.checked;
             const isClockVisible = chkClock.checked;
             const isCalendarVisible = chkCalendar.checked;
 
-            // Показуємо або ховаємо блоки на сторінці
-            blockDay.style.display = isDayVisible ? 'block' : 'none';
-            blockClock.style.display = isClockVisible ? 'block' : 'none';
-            blockCalendar.style.display = isCalendarVisible ? 'block' : 'none';
+            // Змінено з 'block' на 'flex' для коректної роботи адаптивності сітки
+            blockDay.style.display = isDayVisible ? 'flex' : 'none';
+            blockClock.style.display = isClockVisible ? 'flex' : 'none';
+            blockCalendar.style.display = isCalendarVisible ? 'flex' : 'none';
 
             // Скидаємо класи адаптивності
             blockDay.className = 'widget-block';
@@ -380,7 +379,7 @@
         buildFullMonthCalendar();
         adjustLayout();
 
-        // Щомиті оновлюємо час (годинник) та раз на хвилину перевіряємо дату
+        // Щомиті оновлюємо час (годинник)
         setInterval(updateWidgetData, 1000);
     </script>
 </body>
