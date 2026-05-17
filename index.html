@@ -6,430 +6,447 @@
     <title>Notion Modular Widget</title>
     <style>
         :root {
-            --bg-color: transparent;
+            --bg-color: #ffffff;
             --text-color: #37352f;
-            --accent-color: #2eaadc;
-            --gray-light: #f1f1ef;
-            --gray-text: #787774;
-            --border-radius: 8px;
+            --border-color: #e9e9e6;
+            --accent-color: #2383e2;
+            --accent-text: #ffffff;
+            --hover-color: #f1f1ef;
+            --menu-bg: #fafafa;
         }
 
-        /* Темна тема для Notion (активується автоматично) */
         @media (prefers-color-scheme: dark) {
             :root {
+                --bg-color: #191919;
                 --text-color: #ffffff;
-                --gray-light: #202020;
-                --gray-text: #9b9b9b;
+                --border-color: #2f2f2f;
+                --accent-color: #2383e2;
+                --accent-text: #ffffff;
+                --hover-color: #242424;
+                --menu-bg: #202020;
             }
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
             margin: 0;
             padding: 10px;
-            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
             user-select: none;
-        }
-
-        /* Загальний контейнер */
-        .widget-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            max-width: 100%;
-            transition: all 0.3s ease;
+            overflow-x: hidden;
         }
 
         /* Панель керування */
-        .control-panel {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--gray-light);
-            padding: 6px 12px;
-            border-radius: var(--border-radius);
-            font-size: 13px;
-            gap: 10px;
-        }
-
-        .left-controls {
+        .controls {
             display: flex;
             align-items: center;
             gap: 10px;
-        }
-
-        .dropdown {
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
             position: relative;
-            display: inline-block;
+            z-index: 100;
         }
 
-        .dropdown-btn {
-            background: transparent;
-            border: 1px solid var(--gray-text);
+        .menu-toggle {
+            background: none;
+            border: 1px solid var(--border-color);
             color: var(--text-color);
-            padding: 4px 8px;
+            padding: 5px 10px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 14px;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
         }
 
-        .dropdown-content {
+        .menu-toggle:hover {
+            background-color: var(--hover-color);
+        }
+
+        .flip-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .flip-btn:hover {
+            background-color: var(--hover-color);
+        }
+
+        /* Випадне меню */
+        .dropdown-menu {
             display: none;
             position: absolute;
-            background-color: var(--gray-light);
-            min-width: 180px;
-            box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
-            padding: 10px;
-            border-radius: 6px;
-            z-index: 10;
-            top: 25px;
+            top: 35px;
             left: 0;
+            background-color: var(--menu-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            min-width: 200px;
             flex-direction: column;
             gap: 8px;
-            border: 1px solid var(--gray-text);
         }
 
-        .dropdown.open .dropdown-content {
+        .dropdown-menu.show {
             display: flex;
         }
 
-        .dropdown-content label {
+        .menu-item {
             display: flex;
             align-items: center;
             gap: 8px;
+            font-size: 14px;
             cursor: pointer;
         }
 
-        .dropdown-content select {
-            background: transparent;
-            color: var(--text-color);
-            border: 1px solid var(--gray-text);
-            border-radius: 4px;
-            padding: 2px;
-            font-size: 11px;
+        .menu-item input {
+            cursor: pointer;
+        }
+
+        .timezone-select {
             width: 100%;
-            margin-top: 4px;
-        }
-
-        .action-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-color);
-            cursor: pointer;
-            font-size: 16px;
-            padding: 4px 8px;
+            padding: 4px;
             border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid transparent;
-        }
-        .action-btn:hover {
-            background: rgba(0,0,0,0.05);
-            border-color: var(--gray-text);
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-color);
+            margin-top: 5px;
         }
 
-        /* Робоче поле віджета */
-        .workspace {
+        /* Основний контейнер модулів */
+        .widget-container {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: row;
             gap: 20px;
-            align-items: center;
-            justify-content: center;
-            transition: flex-direction 0.3s ease;
+            width: 100%;
+            transition: flex-direction 0.3s;
         }
 
-        /* Стан віддзеркалення */
-        .workspace.mirrored {
+        .widget-container.flipped {
             flex-direction: row-reverse;
         }
 
-        /* Модуль День + Годинник */
-        .info-module {
+        /* Ліва панель: День + Годинник */
+        .side-panel {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            text-align: center;
             min-width: 120px;
-            flex: 1;
+            text-align: center;
+            gap: 10px;
         }
 
-        .day-box {
-            display: flex;
-            flex-direction: column;
+        .day-module {
+            display: none;
         }
 
-        .day-box .weekday {
+        .day-module.active {
+            display: block;
+        }
+
+        .day-name {
             font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: var(--gray-text);
+            opacity: 0.6;
         }
 
-        .day-box .day-num {
+        .day-number {
             font-size: 48px;
             font-weight: 700;
             line-height: 1;
             margin: 5px 0;
         }
 
-        .clock-box {
-            font-size: 24px;
+        .month-year {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* Годинник (показується тільки коли активний День) */
+        .clock-module {
+            display: none;
+            font-size: 20px;
             font-weight: 500;
             letter-spacing: 0.5px;
-            margin-top: 5px;
         }
 
-        /* Модуль Календар */
+        .day-module.active .clock-module {
+            display: block; /* видно тільки при виборі модуля День */
+        }
+
+        /* Права панель: Календар днів тижня */
         .calendar-module {
-            min-width: 230px;
-            flex: 1.5;
+            display: none;
+            flex-grow: 1;
+            justify-content: center;
+            align-items: center;
         }
 
-        .cal-header {
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 10px;
-            text-align: center;
+        .calendar-module.active {
+            display: flex;
         }
 
-        .cal-grid {
+        .week-days-row {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
+            gap: 8px;
+            width: 100%;
+            max-width: 400px;
             text-align: center;
-            font-size: 12px;
         }
 
-        .cal-grid .day-name {
-            color: var(--gray-text);
+        .day-cell {
+            padding: 10px 5px;
+            font-size: 14px;
             font-weight: 500;
-            padding-bottom: 4px;
-        }
-
-        .cal-cell {
-            padding: 6px 0;
+            border-radius: 6px;
+            transition: all 0.2s;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            aspect-ratio: 1;
-            border-radius: 4px;
+            gap: 4px;
         }
 
-        /* Круглий стиль дат */
-        .calendar-module.style-round .cal-cell {
+        /* Круглий стиль для виділеного дня */
+        .day-cell.circle-style.today .day-cell-num {
+            background-color: var(--accent-color);
+            color: var(--accent-text);
             border-radius: 50%;
         }
 
-        .cal-cell.today {
+        /* Сітка/Квадратний стиль для виділеного дня */
+        .day-cell.grid-style.today {
             background-color: var(--accent-color);
-            color: white !important;
-            font-weight: bold;
+            color: var(--accent-text);
         }
 
-        .cal-cell.empty {
-            visibility: hidden;
+        .day-cell-name {
+            font-size: 11px;
+            opacity: 0.5;
+            text-transform: uppercase;
         }
 
-        /* Ховаємо вимкнені модулі */
-        .hidden {
-            display: none !important;
+        .day-cell-num {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        /* Адаптивність для вузьких колонок */
+        @media (max-width: 320px) {
+            .widget-container {
+                flex-direction: column !important;
+                align-items: center;
+            }
+            .week-days-row {
+                max-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
 
-    <div class="widget-container">
-        <div class="control-panel">
-            <div class="left-controls">
-                <div class="dropdown" id="configDropdown">
-                    <button class="dropdown-btn" onclick="toggleDropdown()">🛠️ Конструктор</button>
-                    <div class="dropdown-content">
-                        <label><input type="checkbox" id="chkCal" checked onchange="updateModules()"> Календар</label>
-                        <label><input type="checkbox" id="chkDay" checked onchange="updateModules()"> Модуль "День"</label>
-                        <label><input type="checkbox" id="chkClock" checked onchange="updateModules()"> Модуль "Годинник"</label>
-                        <hr style="width:100%; border:0; border-top:1px solid var(--gray-text); margin:4px 0;">
-                        <label style="font-size:11px;">Стиль дат:</label>
-                        <select id="selCalStyle" onchange="updateCalStyle()">
-                            <option value="grid">Квадратна сітка</option>
-                            <option value="round">Кружечки</option>
-                        </select>
-                        <label style="font-size:11px; margin-top:4px;">Часовий пояс:</label>
-                        <select id="selTimezone" onchange="updateTime()">
-                            <option value="local">Поточний (Браузер)</option>
-                            <option value="Europe/Kyiv">Київ (GMT+3)</option>
-                            <option value="Europe/London">Лондон (GMT+1)</option>
-                            <option value="America/New_York">Нью-Йорк (GMT-4)</option>
-                            <option value="Asia/Tokyo">Токіо (GMT+9)</option>
-                        </select>
-                    </div>
-                </div>
+    <div class="controls">
+        <button class="menu-toggle" id="menuToggle">⚙️ Конструктор ▾</button>
+        <button class="flip-btn" id="flipBtn" title="Віддзеркалити">⇄</button>
+        
+        <div class="dropdown-menu" id="dropdownMenu">
+            <div class="menu-item">
+                <input type="checkbox" id="modCalendar" checked>
+                <label for="modCalendar">Календар</label>
             </div>
-            <div>
-                <button class="action-btn" onclick="toggleMirror()" title="Віддзеркалити вигляд">⇄</button>
+            <div class="menu-item">
+                <input type="checkbox" id="modDay" checked>
+                <label for="modDay">День + Годинник</label>
+            </div>
+            <hr style="width:100%; border:0; border-top:1px solid var(--border-color); margin:5px 0;">
+            <div class="menu-item">
+                <input type="checkbox" id="styleToggle">
+                <label for="styleToggle">Число в кружечку</label>
+            </div>
+            <div class="menu-item" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+                <label for="tzSelect" style="font-size: 12px; opacity: 0.7;">Часовий пояс:</label>
+                <select id="tzSelect" class="timezone-select">
+                    <option value="Europe/Kyiv">Київ (EET)</option>
+                    <option value="Europe/London">Лондон (GMT)</option>
+                    <option value="America/New_York">Нью-Йорк (EST)</option>
+                    <option value="Asia/Tokyo">Токіо (JST)</option>
+                </select>
             </div>
         </div>
+    </div>
 
-        <div class="workspace" id="workspace">
-            
-            <div class="info-module" id="infoModule">
-                <div class="day-box" id="dayBox">
-                    <span class="weekday" id="txtWeekday">---</span>
-                    <span class="day-num" id="txtDayNum">00</span>
+    <div class="widget-container" id="widgetContainer">
+        <div class="side-panel day-module active" id="dayModule">
+            <div class="day-name" id="dayName">Понеділок</div>
+            <div class="day-number" id="dayNumber">17</div>
+            <div class="month-year" id="monthYear">Травень 2026</div>
+            <div class="clock-module" id="clockModule">00:00:00</div>
+        </div>
+
+        <div class="calendar-module active" id="calendarModule">
+            <div class="week-days-row" id="weekDaysRow">
                 </div>
-                <div class="clock-box" id="clockBox">00:00:00</div>
-            </div>
-
-            <div class="calendar-module" id="calendarModule">
-                <div class="cal-header" id="calHeader">Місяць РІК</div>
-                <div class="cal-grid" id="calGrid">
-                    </div>
-            </div>
-
         </div>
     </div>
 
     <script>
-        // Стан конструктора (збереження в пам'ять браузера, щоб не злітало при оновленні)
-        let state = {
-            showCal: localStorage.getItem('showCal') !== 'false',
-            showDay: localStorage.getItem('showDay') !== 'false',
-            showClock: localStorage.getItem('showClock') !== 'false',
-            calStyle: localStorage.getItem('calStyle') || 'grid',
-            isMirrored: localStorage.getItem('isMirrored') === 'true',
-            timezone: localStorage.getItem('timezone') || 'local'
+        // Стан конструктора
+        const state = {
+            showCalendar: true,
+            showDay: true,
+            circleStyle: false,
+            timezone: 'Europe/Kyiv',
+            flipped: false
         };
 
-        // Ініціалізація чекбоксів при старті
-        document.getElementById('chkCal').checked = state.showCal;
-        document.getElementById('chkDay').checked = state.showDay;
-        document.getElementById('chkClock').checked = state.showClock;
-        document.getElementById('selCalStyle').value = state.calStyle;
-        document.getElementById('selTimezone').value = state.timezone;
-        if(state.isMirrored) document.getElementById('workspace').classList.add('mirrored');
+        // Елементи інтерфейсу
+        const menuToggle = document.getElementById('menuToggle');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        const flipBtn = document.getElementById('flipBtn');
+        const widgetContainer = document.getElementById('widgetContainer');
+        
+        const modCalendar = document.getElementById('modCalendar');
+        const modDay = document.getElementById('modDay');
+        const styleToggle = document.getElementById('styleToggle');
+        const tzSelect = document.getElementById('tzSelect');
 
-        function toggleDropdown() {
-            document.getElementById('configDropdown').classList.toggle('open');
-        }
+        const calendarModule = document.getElementById('calendarModule');
+        const dayModule = document.getElementById('dayModule');
+        const weekDaysRow = document.getElementById('weekDaysRow');
 
-        // Закриття меню при кліку в іншому місці
-        window.onclick = function(event) {
-            if (!event.target.matches('.dropdown-btn') && !event.target.closest('.dropdown-content')) {
-                document.getElementById('configDropdown').classList.remove('open');
+        // Відкрити/закрити меню
+        menuToggle.addEventListener('click', (e) => {
+            dropdownMenu.classList.toggle('show');
+            e.stopPropagation();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!dropdownMenu.contains(e.target) && e.target !== menuToggle) {
+                dropdownMenu.classList.remove('show');
+            }
+        });
+
+        // Керування відображенням модулів
+        modCalendar.addEventListener('change', (e) => {
+            state.showCalendar = e.target.checked;
+            calendarModule.classList.toggle('active', state.showCalendar);
+            updateLayout();
+        });
+
+        modDay.addEventListener('change', (e) => {
+            state.showDay = e.target.checked;
+            dayModule.classList.toggle('active', state.showDay);
+            updateLayout();
+        });
+
+        styleToggle.addEventListener('change', (e) => {
+            state.circleStyle = e.target.checked;
+            renderCalendar();
+        });
+
+        tzSelect.addEventListener('change', (e) => {
+            state.timezone = e.target.value;
+            updateTime();
+            renderCalendar();
+        });
+
+        flipBtn.addEventListener('click', () => {
+            state.flipped = !state.flipped;
+            widgetContainer.classList.toggle('flipped', state.flipped);
+        });
+
+        function updateLayout() {
+            if (!state.showCalendar && !state.showDay) {
+                widgetContainer.style.display = 'none';
+            } else {
+                widgetContainer.style.display = 'flex';
             }
         }
 
-        function toggleMirror() {
-            state.isMirrored = !state.isMirrored;
-            localStorage.setItem('isMirrored', state.isMirrored);
-            document.getElementById('workspace').classList.toggle('mirrored', state.isMirrored);
-        }
-
-        function updateCalStyle() {
-            state.calStyle = document.getElementById('selCalStyle').value;
-            localStorage.setItem('calStyle', state.calStyle);
-            const calMod = document.getElementById('calendarModule');
-            calMod.classList.toggle('style-round', state.calStyle === 'round');
-        }
-
-        function updateModules() {
-            state.showCal = document.getElementById('chkCal').checked;
-            state.showDay = document.getElementById('chkDay').checked;
-            state.showClock = document.getElementById('chkClock').checked;
-
-            localStorage.setItem('showCal', state.showCal);
-            localStorage.setItem('showDay', state.showDay);
-            localStorage.setItem('showClock', state.showClock);
-
-            document.getElementById('calendarModule').classList.toggle('hidden', !state.showCal);
-            document.getElementById('dayBox').classList.toggle('hidden', !state.showDay);
-            document.getElementById('clockBox').classList.toggle('hidden', !state.showClock);
-            
-            // Якщо вимкнено і день, і годинник — ховаємо весь лівий блок
-            document.getElementById('infoModule').classList.toggle('hidden', !state.showDay && !state.showClock);
-        }
-
+        // Оновлення часу та великої дати
         function updateTime() {
-            state.timezone = document.getElementById('selTimezone').value;
-            localStorage.setItem('timezone', state.timezone);
-
             const now = new Date();
-            let options = { timeZone: state.timezone === 'local' ? undefined : state.timezone };
             
-            // Форматування часу
-            options.hour = '2-digit'; options.minute = '2-digit'; options.second = '2-digit'; options.hour12 = false;
-            let timeString = now.toLocaleTimeString('uk-UA', options);
-            document.getElementById('clockBox').innerText = timeString;
+            // Опції для часових поясів
+            const timeOptions = { timeZone: state.timezone, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            const dayNumOptions = { timeZone: state.timezone, day: 'numeric' };
+            const dayNameOptions = { timeZone: state.timezone, weekday: 'long' };
+            const monthYearOptions = { timeZone: state.timezone, month: 'long', year: 'numeric' };
 
-            // Форматування дня
-            options.weekday = 'long';
-            let weekdayStr = now.toLocaleDateString('uk-UA', options);
-            options.day = 'numeric';
-            let dayNumStr = now.toLocaleDateString('uk-UA', options);
-
-            document.getElementById('txtWeekday').innerText = weekdayStr;
-            document.getElementById('txtDayNum').innerText = dayNumStr;
+            const localTimeStr = now.toLocaleTimeString('uk-UA', timeOptions);
+            
+            document.getElementById('clockModule').textContent = localTimeStr;
+            document.getElementById('dayNumber').textContent = now.toLocaleDateString('uk-UA', dayNumOptions);
+            
+            const rawDayName = now.toLocaleDateString('uk-UA', dayNameOptions);
+            document.getElementById('dayName').textContent = rawDayName.charAt(0).toUpperCase() + rawDayName.slice(1);
+            
+            const rawMonthYear = now.toLocaleDateString('uk-UA', monthYearOptions);
+            document.getElementById('monthYear').textContent = rawMonthYear.charAt(0).toUpperCase() + rawMonthYear.slice(1);
         }
 
+        // Рендеринг лінії днів тижня
         function renderCalendar() {
+            weekDaysRow.innerHTML = '';
+            
             const now = new Date();
-            const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth();
-            const todayDate = now.getDate();
+            // Отримуємо поточну дату відносно обраного часового поясу
+            const targetDateStr = now.toLocaleString('en-US', { timeZone: state.timezone });
+            const targetDate = new Date(targetDateStr);
+            
+            const currentDayOfWeek = targetDate.getDay(); // 0 - Нд, 1 - Пн...
+            const currentDayOfMonth = targetDate.getDate();
 
-            const monthNames = ["Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень", "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"];
-            document.getElementById('calHeader').innerText = `${monthNames[currentMonth]} ${currentYear}`;
+            // Перетворюємо неділю з 0 на 7, щоб легше рахувати від понеділка (1)
+            const todayIndex = currentDayOfWeek === 0 ? 7 : currentDayOfWeek;
 
-            const grid = document.getElementById('calGrid');
-            grid.innerHTML = '';
+            const daysShort = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
 
-            // Дні тижня
-            const daysMin = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
-            daysMin.forEach(d => {
-                const div = document.createElement('div');
-                div.className = 'day-name';
-                div.innerText = d;
-                grid.appendChild(div);
-            });
+            for (let i = 1; i <= 7; i++) {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day-cell';
+                dayCell.classList.add(state.circleStyle ? 'circle-style' : 'grid-style');
 
-            // Перший день місяця і кількість днів
-            let firstDay = new Date(currentYear, currentMonth, 1).getDay();
-            firstDay = firstDay === 0 ? 6 : firstDay - 1; // Адаптація під Понеділок як 1-й день
-            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                // Рахуємо число місяця для кожного дня поточного тижня
+                const diff = i - todayIndex;
+                const cellDate = new Date(targetDate);
+                cellDate.setDate(currentDayOfMonth + diff);
 
-            // Порожні клітинки на початку
-            for (let i = 0; i < firstDay; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'cal-cell empty';
-                grid.appendChild(cell);
-            }
-
-            // Клітинки з числами
-            for (let d = 1; d <= daysInMonth; d++) {
-                const cell = document.createElement('div');
-                cell.className = 'cal-cell';
-                cell.innerText = d;
-                if (d === todayDate && state.timezone === 'local') { 
-                    // Підсвічуємо сьогодні, якщо вибрано локальний час
-                    cell.className += ' today';
+                if (i === todayIndex) {
+                    dayCell.classList.add('today');
                 }
-                grid.appendChild(cell);
+
+                dayCell.innerHTML = `
+                    <div class="day-cell-name">${daysShort[i-1]}</div>
+                    <div class="day-cell-num">${cellDate.getDate()}</div>
+                `;
+                weekDaysRow.appendChild(dayCell);
             }
         }
 
-        // Старт роботи
-        updateModules();
-        updateCalStyle();
+        // Ініціалізація роботи
+        setInterval(updateTime, 1000);
+        updateTime();
         renderCalendar();
         
-        updateTime();
-        setInterval(updateTime, 1000); // Оновлення часу щосекунди
+        // Перерендер календаря раз на годину про всяк випадок
+        setInterval(renderCalendar, 3600000);
     </script>
 </body>
 </html>
