@@ -161,11 +161,38 @@
             width: 100%;
         }
 
+        .calendar-header-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 0 4px;
+        }
+
         .calendar-header {
             font-size: clamp(12px, 3.2vw, 15px);
             font-weight: 600;
             text-align: center;
-            margin-bottom: 8px;
+            flex-grow: 1;
+        }
+
+        .btn-nav {
+            background: none;
+            border: none;
+            color: var(--muted-text);
+            font-size: clamp(14px, 4vw, 18px);
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .btn-nav:hover {
+            background-color: var(--hover-color);
+            color: var(--text-color);
         }
 
         .calendar-grid {
@@ -236,7 +263,11 @@
 
         <div id="block-calendar" class="widget-block w-full">
             <div class="calendar-container">
-                <div class="calendar-header" id="calendar-month-year">Місяць Рік</div>
+                <div class="calendar-header-wrapper">
+                    <button class="btn-nav" id="btn-prev">‹</button>
+                    <div class="calendar-header" id="calendar-month-year">Місяць Рік</div>
+                    <button class="btn-nav" id="btn-next">›</button>
+                </div>
                 <div class="calendar-grid" id="calendar-days-grid"></div>
             </div>
         </div>
@@ -257,6 +288,12 @@
         const lblClock = document.getElementById('lbl-clock');
         const calendarMonthYear = document.getElementById('calendar-month-year');
         const calendarDaysGrid = document.getElementById('calendar-days-grid');
+        
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+
+        // Стан для відстеження активного місяця в календарі
+        let currentRenderDate = new Date();
 
         function updateWidgetData() {
             const now = new Date();
@@ -271,16 +308,15 @@
         }
 
         function buildFullMonthCalendar() {
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth();
-            const todayDate = now.getDate();
+            const realNow = new Date();
+            const renderYear = currentRenderDate.getFullYear();
+            const renderMonth = currentRenderDate.getMonth();
 
             const monthNames = [
                 'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
                 'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'
             ];
-            calendarMonthYear.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            calendarMonthYear.textContent = `${monthNames[renderMonth]} ${renderYear}`;
 
             calendarDaysGrid.innerHTML = '';
 
@@ -292,11 +328,11 @@
                 calendarDaysGrid.appendChild(dayHeader);
             });
 
-            const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+            const firstDayOfMonth = new Date(renderYear, renderMonth, 1);
             let startDayOfWeek = firstDayOfMonth.getDay();
             if (startDayOfWeek === 0) startDayOfWeek = 7;
 
-            const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const totalDaysInMonth = new Date(renderYear, renderMonth + 1, 0).getDate();
 
             for (let i = 1; i < startDayOfWeek; i++) {
                 const emptyCell = document.createElement('div');
@@ -309,7 +345,8 @@
                 dayCell.className = 'day-cell';
                 dayCell.textContent = day;
 
-                if (day === todayDate) {
+                // Підсвічуємо сьогоднішній день тільки якщо рендериться поточний місяць і рік
+                if (day === realNow.getDate() && renderMonth === realNow.getMonth() && renderYear === realNow.getFullYear()) {
                     dayCell.className = 'day-cell today';
                 }
                 calendarDaysGrid.appendChild(dayCell);
@@ -341,6 +378,17 @@
                 }
             }
         }
+
+        // Обробники кліків по стрілочках навігації місяців
+        btnPrev.addEventListener('click', () => {
+            currentRenderDate.setMonth(currentRenderDate.getMonth() - 1);
+            buildFullMonthCalendar();
+        });
+
+        btnNext.addEventListener('click', () => {
+            currentRenderDate.setMonth(currentRenderDate.getMonth() + 1);
+            buildFullMonthCalendar();
+        });
 
         chkDay.addEventListener('change', adjustLayout);
         chkClock.addEventListener('change', adjustLayout);
