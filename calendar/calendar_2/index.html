@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notion Modular Widget</title>
+    <title>Notion Adaptive Modular Widget</title>
     <style>
         :root {
             --bg-color: #ffffff;
@@ -32,7 +32,7 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 10px;
+            padding: 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -40,25 +40,26 @@
             min-height: 100vh;
             box-sizing: border-box;
             user-select: none;
+            overflow-x: hidden;
         }
 
-        /* Меню налаштувань (Toggle) */
+        /* Адаптивне меню налаштувань */
         .settings-container {
             width: 100%;
-            max-width: 450px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             z-index: 100;
+            box-sizing: border-box;
         }
 
         details {
             background: var(--hover-color);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 8px 12px;
+            padding: 6px 10px;
         }
 
         summary {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             cursor: pointer;
             outline: none;
@@ -68,126 +69,124 @@
         .checkbox-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            margin-top: 10px;
-            padding-left: 5px;
+            gap: 6px;
+            margin-top: 8px;
         }
 
         .checkbox-label {
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 13px;
+            font-size: 12px;
             cursor: pointer;
         }
 
-        /* Головна сітка віджета */
+        /* Повністю гумова сітка */
         .widget-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 10px;
             width: 100%;
-            max-width: 450px;
-            justify-content: center;
+            box-sizing: border-box;
         }
 
         .widget-block {
             background: var(--bg-color);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 15px;
+            border-radius: 10px;
+            padding: 12px;
             box-sizing: border-box;
             transition: all 0.2s ease;
-            display: none; /* Керується динамічно через JS */
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            min-width: 120px;
         }
 
-        /* Адаптивні класи ширини */
+        /* Динамічні класи адаптивності під розмір вікна */
         .w-full {
             flex: 1 1 100%;
         }
         
         .w-half {
-            flex: 1 1 calc(50% - 8px);
-            min-width: 180px;
+            flex: 1 1 calc(50% - 5px);
         }
 
-        /* Стилі модуля: День */
+        /* Модуль: День (Адаптивні шрифти) */
         .day-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
+            width: 100%;
         }
 
         .day-title {
-            font-size: 13px;
+            font-size: clamp(10px, 2.8vw, 14px);
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 1px;
             color: var(--muted-text);
             font-weight: 600;
-            margin-bottom: 5px;
+            margin-bottom: 2px;
         }
 
         .day-number {
-            font-size: 44px;
+            font-size: clamp(32px, 9vw, 56px);
             font-weight: 800;
             line-height: 1;
             color: var(--accent-color);
         }
 
-        /* Стилі модуля: Годинник */
+        /* Модуль: Годинник */
         .clock-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
+            width: 100%;
         }
 
         .clock-time {
-            font-size: 32px;
+            font-size: clamp(22px, 6.5vw, 38px);
             font-weight: 700;
             font-variant-numeric: tabular-nums;
             letter-spacing: 0.5px;
         }
 
-        /* Стилі модуля: Календар Місяця */
+        /* Модуль: Календар */
         .calendar-container {
             width: 100%;
         }
 
         .calendar-header {
-            font-size: 14px;
+            font-size: clamp(12px, 3.2vw, 15px);
             font-weight: 600;
             text-align: center;
-            margin-bottom: 12px;
-            color: var(--text-color);
+            margin-bottom: 8px;
         }
 
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
+            gap: 2px;
             text-align: center;
         }
 
         .weekday {
-            font-size: 11px;
+            font-size: clamp(9px, 2.4vw, 11px);
             font-weight: 600;
             color: var(--muted-text);
-            padding-bottom: 4px;
+            padding-bottom: 2px;
             text-transform: uppercase;
         }
 
         .day-cell {
-            font-size: 12px;
-            padding: 6px 0;
-            border-radius: 6px;
-            color: var(--text-color);
+            font-size: clamp(10px, 2.6vw, 13px);
+            padding: 4px 0;
+            border-radius: 4px;
         }
 
         .day-cell.empty {
@@ -205,7 +204,7 @@
 
     <div class="settings-container">
         <details>
-            <summary>⚙️ Конструктор модулів</summary>
+            <summary>⚙️ Налаштування модулів</summary>
             <div class="checkbox-group">
                 <label class="checkbox-label">
                     <input type="checkbox" id="chk-day" checked> Модуль: День
@@ -238,65 +237,53 @@
         <div id="block-calendar" class="widget-block w-full">
             <div class="calendar-container">
                 <div class="calendar-header" id="calendar-month-year">Місяць Рік</div>
-                <div class="calendar-grid" id="calendar-days-grid">
-                    </div>
+                <div class="calendar-grid" id="calendar-days-grid"></div>
             </div>
         </div>
 
     </div>
 
     <script>
-        // Елементи чекбоксів
         const chkDay = document.getElementById('chk-day');
         const chkClock = document.getElementById('chk-clock');
         const chkCalendar = document.getElementById('chk-calendar');
 
-        // Елементи блоків коду
         const blockDay = document.getElementById('block-day');
         const blockClock = document.getElementById('block-clock');
         const blockCalendar = document.getElementById('block-calendar');
 
-        // Текстові мітки
         const lblDayName = document.getElementById('lbl-day-name');
         const lblDayNum = document.getElementById('lbl-day-num');
         const lblClock = document.getElementById('lbl-clock');
         const calendarMonthYear = document.getElementById('calendar-month-year');
         const calendarDaysGrid = document.getElementById('calendar-days-grid');
 
-        // Функція оновлення дат та часу
         function updateWidgetData() {
             const now = new Date();
-
-            // 1. Оновлення Дня
-            const dayNames = ['Неділя', 'Понеділок', 'Вівторок', 'Середа', 'Четвер', 'Пятниця', 'Субота'];
+            const dayNames = ['Неділя', 'Понеділок', 'Вівторок', 'Середа', 'Четвер', "П'ятниця", 'Субота'];
             lblDayName.textContent = dayNames[now.getDay()];
             lblDayNum.textContent = now.getDate();
 
-            // 2. Оновлення Годинника
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
             lblClock.textContent = `${hours}:${minutes}:${seconds}`;
         }
 
-        // Побудова сітки повного місяця
         function buildFullMonthCalendar() {
             const now = new Date();
             const currentYear = now.getFullYear();
             const currentMonth = now.getMonth();
             const todayDate = now.getDate();
 
-            // Назва місяця та рік для заголовка
             const monthNames = [
                 'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
                 'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'
             ];
             calendarMonthYear.textContent = `${monthNames[currentMonth]} ${currentYear}`;
 
-            // Очищення старої сітки
             calendarDaysGrid.innerHTML = '';
 
-            // Дні тижня (Понеділок - Неділя)
             const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
             weekdays.forEach(day => {
                 const dayHeader = document.createElement('div');
@@ -305,81 +292,64 @@
                 calendarDaysGrid.appendChild(dayHeader);
             });
 
-            // Перший день місяця (дізнаємось день тижня)
             const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
             let startDayOfWeek = firstDayOfMonth.getDay();
-            if (startDayOfWeek === 0) startDayOfWeek = 7; // Перетворюємо неділю (0) в 7
+            if (startDayOfWeek === 0) startDayOfWeek = 7;
 
-            // Кількість днів у місяці
             const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-            // Додаємо порожні клітинки для відступу на початку місяця
             for (let i = 1; i < startDayOfWeek; i++) {
                 const emptyCell = document.createElement('div');
                 emptyCell.className = 'day-cell empty';
                 calendarDaysGrid.appendChild(emptyCell);
             }
 
-            // Додаємо самі числа місяця
             for (let day = 1; day <= totalDaysInMonth; day++) {
                 const dayCell = document.createElement('div');
                 dayCell.className = 'day-cell';
                 dayCell.textContent = day;
 
-                // Підсвічування сьогоднішнього дня
                 if (day === todayDate) {
                     dayCell.className = 'day-cell today';
                 }
-
                 calendarDaysGrid.appendChild(dayCell);
             }
         }
 
-        // Логіка відображення та динамічної зміни розмірів сітки
         function adjustLayout() {
             const isDayVisible = chkDay.checked;
             const isClockVisible = chkClock.checked;
             const isCalendarVisible = chkCalendar.checked;
 
-            // Змінено з 'block' на 'flex' для коректної роботи адаптивності сітки
             blockDay.style.display = isDayVisible ? 'flex' : 'none';
             blockClock.style.display = isClockVisible ? 'flex' : 'none';
             blockCalendar.style.display = isCalendarVisible ? 'flex' : 'none';
 
-            // Скидаємо класи адаптивності
             blockDay.className = 'widget-block';
             blockClock.className = 'widget-block';
 
-            // Перевірка логіки розтягування
             if (isCalendarVisible) {
-                // Якщо календар є, день і годинник стають половинками поруч
                 blockDay.classList.add('w-half');
                 blockClock.classList.add('w-half');
             } else {
-                // Якщо календаря НЕМАЄ:
                 if (isDayVisible && isClockVisible) {
-                    // Якщо активні обидва, вони ділять простір 50/50
                     blockDay.classList.add('w-half');
                     blockClock.classList.add('w-half');
                 } else {
-                    // Якщо залишився тільки День або тільки Годинник — розтягуємо на 100% поля!
                     if (isDayVisible) blockDay.classList.add('w-full');
                     if (isClockVisible) blockClock.classList.add('w-full');
                 }
             }
         }
 
-        // Слухачі подій на зміну прапорців
         chkDay.addEventListener('change', adjustLayout);
         chkClock.addEventListener('change', adjustLayout);
         chkCalendar.addEventListener('change', adjustLayout);
 
-        // Старт роботи віджета
         updateWidgetData();
         buildFullMonthCalendar();
         adjustLayout();
 
-        // Щомиті оновлюємо час (годинник)
         setInterval(updateWidgetData, 1000);
     </script>
 </body>
