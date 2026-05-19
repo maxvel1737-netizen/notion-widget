@@ -13,6 +13,7 @@
             --border-color: #ededed;
             --accent-color: #2383e2;
             --menu-bg: #f4f5f6;
+            --card-bg: rgba(0, 0, 0, 0.02);
         }
 
         @media (prefers-color-scheme: dark) {
@@ -23,6 +24,7 @@
                 --border-color: #2f2f2f;
                 --accent-color: #2383e2;
                 --menu-bg: #202020;
+                --card-bg: rgba(255, 255, 255, 0.02);
             }
         }
 
@@ -44,21 +46,29 @@
             justify-content: center;
             align-items: center;
             position: relative;
+            padding: 10px;
         }
 
-        /* Головний контейнер годинників */
+        /* Головний контейнер годинників (гнучка Flex-сітка) */
         .clocks-container {
             display: flex;
+            flex-direction: row; /* За замовчуванням горизонтально */
             width: 100%;
             height: 100%;
-            justify-content: space-around;
+            justify-content: center;
             align-items: center;
-            padding: 10px;
-            gap: 15px;
+            gap: 12px;
             transition: all 0.3s ease;
         }
 
-        /* Картка окремого годинника */
+        /* Адаптація під ВУЗЬКЕ поле: якщо ширина екрана менша за 340px, годинники стають один під одним */
+        @media (max-width: 340px) {
+            .clocks-container {
+                flex-direction: column;
+            }
+        }
+
+        /* Картка окремого годинника з рамкою */
         .clock-card {
             flex: 1;
             display: flex;
@@ -67,7 +77,13 @@
             align-items: center;
             text-align: center;
             height: 100%;
+            width: 100%;
             min-width: 0; /* Запобігає виходу тексту за межі */
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            transition: border-color 0.2s ease;
         }
 
         /* Приховування другого годинника, якщо він вимкнений */
@@ -77,7 +93,7 @@
 
         /* Динамічний розмір цифр */
         .time {
-            font-size: clamp(1.8rem, 12vw, 5rem);
+            font-size: clamp(1.6rem, 10vw, 4.5rem);
             font-weight: 600;
             font-variant-numeric: tabular-nums;
             line-height: 1.1;
@@ -87,9 +103,9 @@
 
         /* Назва міста під цифрами */
         .city-name {
-            font-size: clamp(0.75rem, 3vw, 1.2rem);
+            font-size: clamp(0.7rem, 2.5vw, 1.1rem);
             color: var(--sub-text-color);
-            margin-top: 4px;
+            margin-top: 6px;
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -102,11 +118,11 @@
         /* Кнопка виклику / закриття налаштувань у нижньому лівому куті */
         .menu-toggle-btn {
             position: absolute;
-            bottom: 10px;
-            left: 10px;
+            bottom: 15px;
+            left: 15px;
             width: 28px;
             height: 28px;
-            background-color: rgba(0, 0, 0, 0.05);
+            background-color: var(--bg-color);
             border: 1px solid var(--border-color);
             border-radius: 6px;
             cursor: pointer;
@@ -115,16 +131,16 @@
             align-items: center;
             z-index: 10;
             color: var(--sub-text-color);
-            transition: background-color 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .menu-toggle-btn:active {
+            transform: scale(0.95);
         }
 
         body:hover .menu-toggle-btn {
-            background-color: rgba(0, 0, 0, 0.1);
-        }
-
-        @media (prefers-color-scheme: dark) {
-            .menu-toggle-btn { background-color: rgba(255, 255, 255, 0.05); }
-            body:hover .menu-toggle-btn { background-color: rgba(255, 255, 255, 0.1); }
+            background-color: var(--menu-bg);
         }
 
         .menu-toggle-btn svg {
@@ -142,7 +158,7 @@
             height: 100%;
             background-color: var(--menu-bg);
             z-index: 5;
-            padding: 15px 15px 45px 15px; /* Запас знизу під кнопку */
+            padding: 15px 15px 55px 15px; /* Запас знизу під кнопку */
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -169,13 +185,10 @@
             display: flex;
             flex-direction: column;
             gap: 4px;
-            background: rgba(0,0,0,0.02);
-            padding: 6px;
+            background: var(--bg-color);
+            padding: 8px;
             border-radius: 6px;
             border: 1px solid var(--border-color);
-        }
-        @media (prefers-color-scheme: dark) {
-            .setting-group { background: rgba(255,255,255,0.02); }
         }
 
         .setting-row {
@@ -187,13 +200,15 @@
 
         label {
             font-weight: 500;
+            font-size: 0.8rem;
+            color: var(--sub-text-color);
         }
 
         select, input[type="text"] {
-            background-color: var(--bg-color);
+            background-color: var(--menu-bg);
             color: var(--text-color);
             border: 1px solid var(--border-color);
-            padding: 4px 6px;
+            padding: 5px 6px;
             border-radius: 4px;
             font-size: 0.85rem;
             outline: none;
@@ -206,6 +221,8 @@
             align-items: center;
             gap: 6px;
             cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--text-color);
         }
 
         /* Стилізація скролбару для меню */
@@ -244,7 +261,7 @@
         <div class="settings-title">Налаштування віджета</div>
 
         <div class="setting-group">
-            <div class="setting-row"><label style="color: var(--accent-color);">Годинник 1 (Основний)</label></div>
+            <div class="setting-row"><label style="color: var(--accent-color); font-weight: 600;">Годинник 1 (Основний)</label></div>
             <div>
                 <label for="tzSelect1">Часовий пояс:</label>
                 <select id="tzSelect1"></select>
@@ -257,7 +274,7 @@
 
         <div class="setting-group">
             <div class="setting-row">
-                <label style="color: var(--accent-color);">Годинник 2 (Додатковий)</label>
+                <label style="color: var(--accent-color); font-weight: 600;">Годинник 2 (Додатковий)</label>
                 <label class="checkbox-container">
                     <input type="checkbox" id="enableClock2"> Увімкнути
                 </label>
@@ -284,7 +301,7 @@
     </div>
 
     <script>
-        // Список популярних часових поясів для вибору
+        // Список часових поясів
         const timeZones = [
             { name: "Київ (Вільнюс, Хельсінкі)", value: "Europe/Kyiv" },
             { name: "Лондон (GMT)", value: "Europe/London" },
@@ -314,7 +331,7 @@
         const clockCard2 = document.getElementById('clockCard2');
         const showSeconds = document.getElementById('showSeconds');
 
-        // Стан віджета (завантажується з localStorage або використовуються дефолти)
+        // Стан конфігурації
         let config = {
             tz1: localStorage.getItem('clk_tz1') || "Europe/Kyiv",
             name1: localStorage.getItem('clk_name1') || "",
@@ -324,7 +341,6 @@
             seconds: localStorage.getItem('clk_sec') !== 'false'
         };
 
-        // Ініціалізація випадаючих списків часових поясів
         function initSelects() {
             timeZones.forEach(zone => {
                 let opt1 = document.createElement('option');
@@ -340,7 +356,6 @@
                 tzSelect2.appendChild(opt2);
             });
 
-            // Виставлення збережених кастомних назв в інпути
             cityNameInput1.value = config.name1;
             cityNameInput2.value = config.name2;
             enableClock2.checked = config.hasSecondClock;
@@ -349,7 +364,6 @@
             toggleClock2Visibility();
         }
 
-        // Перемикач відображення другого годинника
         function toggleClock2Visibility() {
             if (config.hasSecondClock) {
                 clock2Options.style.display = 'flex';
@@ -360,7 +374,7 @@
             }
         }
 
-        // Логіка роботи кнопки Відкрити/Закрити меню налаштувань
+        // Керування меню налаштувань
         menuToggleBtn.addEventListener('click', () => {
             const isOpen = settingsMenu.classList.toggle('open');
             if (isOpen) {
@@ -372,13 +386,11 @@
             }
         });
 
-        // Слухачі подій для збереження конфігурацій при їх зміні
+        // Слухачі змін налаштувань
         tzSelect1.addEventListener('change', (e) => { config.tz1 = e.target.value; localStorage.setItem('clk_tz1', config.tz1); });
         tzSelect2.addEventListener('change', (e) => { config.tz2 = e.target.value; localStorage.setItem('clk_tz2', config.tz2); });
-        
         cityNameInput1.addEventListener('input', (e) => { config.name1 = e.target.value; localStorage.setItem('clk_name1', config.name1); });
         cityNameInput2.addEventListener('input', (e) => { config.name2 = e.target.value; localStorage.setItem('clk_name2', config.name2); });
-        
         enableClock2.addEventListener('change', (e) => { 
             config.hasSecondClock = e.target.checked; 
             localStorage.setItem('clk_has2', config.hasSecondClock); 
@@ -386,18 +398,15 @@
         });
         showSeconds.addEventListener('change', (e) => { config.seconds = e.target.checked; localStorage.setItem('clk_sec', config.seconds); });
 
-        // Функція отримання назви міста за дефолтом (якщо інпут порожній)
         function getDefaultCityName(timeZoneStr) {
             if (timeZoneStr === 'UTC') return 'UTC';
             const parts = timeZoneStr.split('/');
             return parts[parts.length - 1].replace('_', ' ');
         }
 
-        // Головне оновлення часу (рендеринг годинників)
         function updateClocks() {
             const now = new Date();
 
-            // Опції форматування часу
             const timeOptions1 = {
                 timeZone: config.tz1,
                 hour: '2-digit',
@@ -405,13 +414,9 @@
                 second: config.seconds ? '2-digit' : undefined,
                 hour12: false
             };
-            
-            // Вивід часу для першого годинника
             document.getElementById('time1').textContent = new Intl.DateTimeFormat('uk-UA', timeOptions1).format(now);
-            // Вивід назви міста для першого годинника
             document.getElementById('cityLabel1').textContent = config.name1.trim() || getDefaultCityName(config.tz1);
 
-            // Якщо увімкнено другий годинник — оновлюємо і його
             if (config.hasSecondClock) {
                 const timeOptions2 = {
                     timeZone: config.tz2,
@@ -425,10 +430,9 @@
             }
         }
 
-        // Старт системи
         initSelects();
         setInterval(updateClocks, 1000);
-        updateClocks(); // Миттєвий запуск без затримок
+        updateClocks();
     </script>
 </body>
 </html>
