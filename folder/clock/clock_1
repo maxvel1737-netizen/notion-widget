@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion Dual Clock Widget</title>
+    <style>
+        /* Базові стилі та адаптація під тему Notion */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #37352f;
+            --sub-text-color: #787774;
+            --border-color: #ededed;
+            --accent-color: #2383e2;
+            --menu-bg: #f4f5f6;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #191919;
+                --text-color: #ffffff;
+                --sub-text-color: #9b9b9b;
+                --border-color: #2f2f2f;
+                --accent-color: #2383e2;
+                --menu-bg: #202020;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Головний контейнер годинників */
+        .clocks-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px;
+            gap: 15px;
+            transition: all 0.3s ease;
+        }
+
+        /* Картка окремого годинника */
+        .clock-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100%;
+            min-width: 0; /* Запобігає виходу тексту за межі */
+        }
+
+        /* Приховування другого годинника, якщо він вимкнений */
+        .clock-card.hidden {
+            display: none !important;
+        }
+
+        /* Динамічний розмір цифр */
+        .time {
+            font-size: clamp(1.8rem, 12vw, 5rem);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            line-height: 1.1;
+            width: 100%;
+            white-space: nowrap;
+        }
+
+        /* Назва міста під цифрами */
+        .city-name {
+            font-size: clamp(0.75rem, 3vw, 1.2rem);
+            color: var(--sub-text-color);
+            margin-top: 4px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Кнопка виклику / закриття налаштувань у нижньому лівому куті */
+        .menu-toggle-btn {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            width: 28px;
+            height: 28px;
+            background-color: rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            color: var(--sub-text-color);
+            transition: background-color 0.2s;
+        }
+
+        body:hover .menu-toggle-btn {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .menu-toggle-btn { background-color: rgba(255, 255, 255, 0.05); }
+            body:hover .menu-toggle-btn { background-color: rgba(255, 255, 255, 0.1); }
+        }
+
+        .menu-toggle-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        /* Вікно налаштувань */
+        .settings-menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--menu-bg);
+            z-index: 5;
+            padding: 15px 15px 45px 15px; /* Запас знизу під кнопку */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .settings-menu.open {
+            transform: translateY(0);
+        }
+
+        .settings-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--sub-text-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: rgba(0,0,0,0.02);
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+        @media (prefers-color-scheme: dark) {
+            .setting-group { background: rgba(255,255,255,0.02); }
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        label {
+            font-weight: 500;
+        }
+
+        select, input[type="text"] {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            outline: none;
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        /* Стилізація скролбару для меню */
+        .settings-menu::-webkit-scrollbar {
+            width: 4px;
+        }
+        .settings-menu::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="clocks-container" id="clocksContainer">
+        <div class="clock-card" id="clockCard1">
+            <div class="time" id="time1">00:00:00</div>
+            <div class="city-name" id="cityLabel1">Київ</div>
+        </div>
+        <div class="clock-card hidden" id="clockCard2">
+            <div class="time" id="time2">00:00:00</div>
+            <div class="city-name" id="cityLabel2">Лондон</div>
+        </div>
+    </div>
+
+    <button class="menu-toggle-btn" id="menuToggleBtn" title="Налаштування">
+        <svg id="gearIcon" viewBox="0 0 16 16">
+            <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.86z"/>
+        </svg>
+        <svg id="closeIcon" viewBox="0 0 16 16" style="display:none;">
+            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+        </svg>
+    </button>
+
+    <div class="settings-menu" id="settingsMenu">
+        <div class="settings-title">Налаштування віджета</div>
+
+        <div class="setting-group">
+            <div class="setting-row"><label style="color: var(--accent-color);">Годинник 1 (Основний)</label></div>
+            <div>
+                <label for="tzSelect1">Часовий пояс:</label>
+                <select id="tzSelect1"></select>
+            </div>
+            <div>
+                <label for="cityNameInput1">Кастомна назва міста:</label>
+                <input type="text" id="cityNameInput1" placeholder="За замовчуванням">
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <div class="setting-row">
+                <label style="color: var(--accent-color);">Годинник 2 (Додатковий)</label>
+                <label class="checkbox-container">
+                    <input type="checkbox" id="enableClock2"> Увімкнути
+                </label>
+            </div>
+            <div id="clock2Options" style="display: none; flex-direction: column; gap: 4px; width: 100%;">
+                <div>
+                    <label for="tzSelect2">Часовий пояс:</label>
+                    <select id="tzSelect2"></select>
+                </div>
+                <div>
+                    <label for="cityNameInput2">Кастомна назва міста:</label>
+                    <input type="text" id="cityNameInput2" placeholder="За замовчуванням">
+                </div>
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <div class="setting-row">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="showSeconds" checked> Відображати секунди
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Список популярних часових поясів для вибору
+        const timeZones = [
+            { name: "Київ (Вільнюс, Хельсінкі)", value: "Europe/Kyiv" },
+            { name: "Лондон (GMT)", value: "Europe/London" },
+            { name: "Париж (Берлін, Рим, Варшава)", value: "Europe/Paris" },
+            { name: "Нью-Йорк (EST)", value: "America/New_York" },
+            { name: "Лос-Анджелес (PST)", value: "America/Los_Angeles" },
+            { name: "Токіо", value: "Asia/Tokyo" },
+            { name: "Сідней", value: "Australia/Sydney" },
+            { name: "Дубай", value: "Asia/Dubai" },
+            { name: "Стамбул", value: "Europe/Istanbul" },
+            { name: "UTC / Гринвіч", value: "UTC" }
+        ];
+
+        // Елементи DOM
+        const menuToggleBtn = document.getElementById('menuToggleBtn');
+        const settingsMenu = document.getElementById('settingsMenu');
+        const gearIcon = document.getElementById('gearIcon');
+        const closeIcon = document.getElementById('closeIcon');
+        
+        const tzSelect1 = document.getElementById('tzSelect1');
+        const cityNameInput1 = document.getElementById('cityNameInput1');
+        const tzSelect2 = document.getElementById('tzSelect2');
+        const cityNameInput2 = document.getElementById('cityNameInput2');
+        
+        const enableClock2 = document.getElementById('enableClock2');
+        const clock2Options = document.getElementById('clock2Options');
+        const clockCard2 = document.getElementById('clockCard2');
+        const showSeconds = document.getElementById('showSeconds');
+
+        // Стан віджета (завантажується з localStorage або використовуються дефолти)
+        let config = {
+            tz1: localStorage.getItem('clk_tz1') || "Europe/Kyiv",
+            name1: localStorage.getItem('clk_name1') || "",
+            tz2: localStorage.getItem('clk_tz2') || "Europe/London",
+            name2: localStorage.getItem('clk_name2') || "",
+            hasSecondClock: localStorage.getItem('clk_has2') === 'true',
+            seconds: localStorage.getItem('clk_sec') !== 'false'
+        };
+
+        // Ініціалізація випадаючих списків часових поясів
+        function initSelects() {
+            timeZones.forEach(zone => {
+                let opt1 = document.createElement('option');
+                opt1.value = zone.value;
+                opt1.textContent = zone.name;
+                if(zone.value === config.tz1) opt1.selected = true;
+                tzSelect1.appendChild(opt1);
+
+                let opt2 = document.createElement('option');
+                opt2.value = zone.value;
+                opt2.textContent = zone.name;
+                if(zone.value === config.tz2) opt2.selected = true;
+                tzSelect2.appendChild(opt2);
+            });
+
+            // Виставлення збережених кастомних назв в інпути
+            cityNameInput1.value = config.name1;
+            cityNameInput2.value = config.name2;
+            enableClock2.checked = config.hasSecondClock;
+            showSeconds.checked = config.seconds;
+
+            toggleClock2Visibility();
+        }
+
+        // Перемикач відображення другого годинника
+        function toggleClock2Visibility() {
+            if (config.hasSecondClock) {
+                clock2Options.style.display = 'flex';
+                clockCard2.classList.remove('hidden');
+            } else {
+                clock2Options.style.display = 'none';
+                clockCard2.classList.add('hidden');
+            }
+        }
+
+        // Логіка роботи кнопки Відкрити/Закрити меню налаштувань
+        menuToggleBtn.addEventListener('click', () => {
+            const isOpen = settingsMenu.classList.toggle('open');
+            if (isOpen) {
+                gearIcon.style.display = 'none';
+                closeIcon.style.display = 'block';
+            } else {
+                gearIcon.style.display = 'block';
+                closeIcon.style.display = 'none';
+            }
+        });
+
+        // Слухачі подій для збереження конфігурацій при їх зміні
+        tzSelect1.addEventListener('change', (e) => { config.tz1 = e.target.value; localStorage.setItem('clk_tz1', config.tz1); });
+        tzSelect2.addEventListener('change', (e) => { config.tz2 = e.target.value; localStorage.setItem('clk_tz2', config.tz2); });
+        
+        cityNameInput1.addEventListener('input', (e) => { config.name1 = e.target.value; localStorage.setItem('clk_name1', config.name1); });
+        cityNameInput2.addEventListener('input', (e) => { config.name2 = e.target.value; localStorage.setItem('clk_name2', config.name2); });
+        
+        enableClock2.addEventListener('change', (e) => { 
+            config.hasSecondClock = e.target.checked; 
+            localStorage.setItem('clk_has2', config.hasSecondClock); 
+            toggleClock2Visibility();
+        });
+        showSeconds.addEventListener('change', (e) => { config.seconds = e.target.checked; localStorage.setItem('clk_sec', config.seconds); });
+
+        // Функція отримання назви міста за дефолтом (якщо інпут порожній)
+        function getDefaultCityName(timeZoneStr) {
+            if (timeZoneStr === 'UTC') return 'UTC';
+            const parts = timeZoneStr.split('/');
+            return parts[parts.length - 1].replace('_', ' ');
+        }
+
+        // Головне оновлення часу (рендеринг годинників)
+        function updateClocks() {
+            const now = new Date();
+
+            // Опції форматування часу
+            const timeOptions1 = {
+                timeZone: config.tz1,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: config.seconds ? '2-digit' : undefined,
+                hour12: false
+            };
+            
+            // Вивід часу для першого годинника
+            document.getElementById('time1').textContent = new Intl.DateTimeFormat('uk-UA', timeOptions1).format(now);
+            // Вивід назви міста для першого годинника
+            document.getElementById('cityLabel1').textContent = config.name1.trim() || getDefaultCityName(config.tz1);
+
+            // Якщо увімкнено другий годинник — оновлюємо і його
+            if (config.hasSecondClock) {
+                const timeOptions2 = {
+                    timeZone: config.tz2,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: config.seconds ? '2-digit' : undefined,
+                    hour12: false
+                };
+                document.getElementById('time2').textContent = new Intl.DateTimeFormat('uk-UA', timeOptions2).format(now);
+                document.getElementById('cityLabel2').textContent = config.name2.trim() || getDefaultCityName(config.tz2);
+            }
+        }
+
+        // Старт системи
+        initSelects();
+        setInterval(updateClocks, 1000);
+        updateClocks(); // Миттєвий запуск без затримок
+    </script>
+</body>
+</html>
